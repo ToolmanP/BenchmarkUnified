@@ -22,3 +22,7 @@
 	path = will-it-scale
 	url = https://github.com/ToolmanP/will-it-scale-dockerized.git
 	branch = runpv
+[submodule "lmbench"]
+	path = lmbench
+	url = https://github.com/ToolmanP/lmbench-dockerized.git
+	branch = runpv
