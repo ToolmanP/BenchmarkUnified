@@ -6,3 +6,7 @@
 	path = blogbench
 	url = https://github.com/ToolmanP/blogbench-dockerized.git
 	branch = runpv
+[submodule "parsec"]
+	path = parsec
+	url = https://github.com/ToolmanP/parsec-dockerized.git
+	branch = runpv
