@@ -18,3 +18,7 @@
 	path = gups
 	url = https://github.com/ToolmanP/gups-dockerized.git
 	branch = runpv
+[submodule "will-it-scale"]
+	path = will-it-scale
+	url = https://github.com/ToolmanP/will-it-scale-dockerized.git
+	branch = runpv
