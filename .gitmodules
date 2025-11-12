@@ -26,3 +26,7 @@
 	path = lmbench
 	url = https://github.com/ToolmanP/lmbench-dockerized.git
 	branch = runpv
+[submodule "vmitosis"]
+	path = vmitosis
+	url = https://github.com/ToolmanP/vmitosis-dockerized.git
+	branch = runpv
