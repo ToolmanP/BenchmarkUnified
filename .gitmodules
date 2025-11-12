@@ -10,3 +10,7 @@
 	path = parsec
 	url = https://github.com/ToolmanP/parsec-dockerized.git
 	branch = runpv
+[submodule "unixbench"]
+	path = unixbench
+	url = https://github.com/ToolmanP/UnixBench-dockerized.git
+	branch = runpv
