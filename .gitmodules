@@ -14,3 +14,7 @@
 	path = unixbench
 	url = https://github.com/ToolmanP/UnixBench-dockerized.git
 	branch = runpv
+[submodule "gups"]
+	path = gups
+	url = https://github.com/ToolmanP/gups-dockerized.git
+	branch = runpv
