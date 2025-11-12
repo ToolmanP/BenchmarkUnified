@@ -2,3 +2,7 @@
 	path = sqlitebench
 	url = https://github.com/ToolmanP/sqlite-bench-dockerized.git
 	branch = runpv
+[submodule "blogbench"]
+	path = blogbench
+	url = https://github.com/ToolmanP/blogbench-dockerized.git
+	branch = runpv
