@@ -30,3 +30,7 @@
 	path = vmitosis
 	url = https://github.com/ToolmanP/vmitosis-dockerized.git
 	branch = runpv
+[submodule "ycsb"]
+	path = ycsb
+	url = https://github.com/ToolmanP/go-ycsb-rocksdb-dockerized.git
+	branch = runpv
