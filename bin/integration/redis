@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# This could be run as a background process to parallel
+RUNTIME=$1
+NAME=$2
+ROUNDS=${3:-1}
+MEM=${MEM:-4G}
+REALMEM=$(echo "$MEM" | cut -d G -f 1)
+REALMEM="$((REALMEM + 2))G"
+NSERVERS=${NSERVERS:-4}
+NCLIENTS=${NCLIENTS:-1}
+
+# Server Side Initialization (Just use the temporary filesystem)
+nerdctl run -d \
+  $EXTRA_SERVER_FLAGS \
+  --runtime "$RUNTIME" \
+  -m "$REALMEM" \
+  --name "$NAME" \
+  --cpus "$NSERVERS" \
+  "$CPUSET" \
+  --tmpfs /tmp \
+  "toolmanp/ioperf-dockerized:22.04-zpoline" \
+  ${ZRUN:-} redis-server --bind 0.0.0.0 --dir /tmp &> /dev/null
+
+IP=$(nerdctl inspect --format '{{.NetworkSettings.IPAddress}}' "$2")
+
+# Client Side Benchmarking (Use native runc)
+for _ in $(seq 1 "$ROUNDS"); do
+  nerdctl run \
+    -it \
+    --rm \
+    "toolmanp/ioperf-dockerized:22.04-zpoline" \
+    redis-benchmark -c "$NCLIENTS" -h "$IP" -p 6379 | tee "$LOGS/$NAME".log
+done
+nerdctl rm --force "$NAME"
