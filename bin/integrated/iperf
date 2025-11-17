@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # This could be run as a background process to parallel
-RUNTIME=$1
-NAME=$2
-ROUNDS=${3:-1}
+RUNTIME=${RUNTIME:-io.containerd.runc.v2}
+NAME=${NAME:-dummy}
+ROUNDS=${ROUNDS:-1}
 MEM=${MEM:-4G}
 REALMEM=$(echo "$MEM" | cut -d G -f 1)
-REALMEM="$((REALMEM + 2))G"
+REALMEM="$((REALMEM + 1))G"
 NSERVERS=${NSERVERS:-4}
 NCLIENTS=${NCLIENTS:-4}
 
@@ -17,12 +17,14 @@ nerdctl run -d \
   -m "$REALMEM" \
   --name "$NAME" \
   --cpus "$NSERVERS" \
-  "$CPUSET" \
+  $CPUSET \
   --tmpfs /tmp \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
-  ${ZRUN:-} memcached -u memcache -m "$MEM" -t "$NSERVERS" &> /dev/null
+  ${ZRUN:-} iperf3 -s
 
-IP=$(nerdctl inspect --format '{{.NetworkSettings.IPAddress}}' "$2")
+sleep 1
+
+IP=$(nerdctl inspect --format '{{.NetworkSettings.IPAddress}}' "$NAME")
 
 # Client Side Benchmarking (Use native runc)
 for _ in $(seq 1 "$ROUNDS"); do
@@ -30,6 +32,8 @@ nerdctl run \
   -it \
   --rm \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
-  memslap -s "$IP:11211" -c "$NCLIENTS" -e 100000
+  bash -c "iperf3 -c $IP -i 1 -t 10 && iperf3 -c $IP -u -i 1 -t 10"
 done
-nerdctl rm --force "$NAME"
+
+sleep 1
+nerdctl rm --force "$NAME" &> /dev/null
