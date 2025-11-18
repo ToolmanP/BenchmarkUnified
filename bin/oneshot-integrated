@@ -1,10 +1,11 @@
 #!/bin/bash
 
 ROUNDS=${ROUNDS:-1}
+TIMESTAMP=$(date +%s)
 NAME=${NAME:-dummy}
 RUNTIME=${RUNTIME:-"io.containerd.runc.v2"}
 
-if ! eval set -- "$(getopt -o r:n:i: --long rounds: -- "$@")"; then
+if ! eval set -- "$(getopt -o n:i: --long rounds: -- "$@")"; then
   exit $?
 fi
 
@@ -34,7 +35,7 @@ while true; do
 done
 
 
-NAME="$INTEGRATION-$NAME-$(date +%s)"
+NAME="$INTEGRATION-$NAME-$TIMESTAMP"
 export NAME
 INTEGRATION="$ROOT/bin/integrated/$INTEGRATION"
 

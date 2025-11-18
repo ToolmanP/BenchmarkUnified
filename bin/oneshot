@@ -20,7 +20,7 @@ spawn_container() {
     --tmpfs /tmp \
     --name "$CONTAINER_NAME" \
     --runtime "$RUNTIME" \
-    "$IMAGE" ${ZRUN:-} bash -c "$@" | tee "${LOGS}/${CONTAINER_NAME}-multiround.log"
+    "$IMAGE" ${ZRUN:-} bash -c "$@" | tee -a "${LOGS}/${CONTAINER_NAME}-multiround.log"
 }
 
 if ! eval set -- "$(getopt -o r:n:i: --long rounds: -- "$@")"; then
@@ -55,7 +55,7 @@ done
 if [[ ! -z "${IMAGE_MAPPING[${IMAGE_CODE}]}" ]]; then
   IMAGE="${IMAGE_MAPPING[$IMAGE_CODE]}"
 else
-  echo "Error: Unknown image code '$IMAGE_CODE'" >&2
+  echo "Error: Unknown image code '$IMAGE_CODE'" > &2
   exit 1
 fi
 
