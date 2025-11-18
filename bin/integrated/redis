@@ -17,7 +17,7 @@ nerdctl run -d \
   -m "$REALMEM" \
   --name "$NAME" \
   --cpus "$NSERVERS" \
-  $CPUSET \
+  $SCPUSET \
   --tmpfs /tmp \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
   ${ZRUN:-} redis-server --bind 0.0.0.0 --dir /tmp &> /dev/null
@@ -30,6 +30,7 @@ IP=$(nerdctl inspect --format '{{.NetworkSettings.IPAddress}}' "$NAME")
 for _ in $(seq 1 "$ROUNDS"); do
 nerdctl run \
   --rm \
+  $CCPUSET \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
   redis-benchmark -c "$NCLIENTS" -h "$IP" -p 6379 | tee -a "$LOGS/$NAME".log
 done

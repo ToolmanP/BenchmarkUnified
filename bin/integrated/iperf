@@ -17,7 +17,7 @@ nerdctl run -d \
   -m "$REALMEM" \
   --name "$NAME" \
   --cpus "$NSERVERS" \
-  $CPUSET \
+  $SCPUSET \
   --tmpfs /tmp \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
   ${ZRUN:-} iperf3 -s &> /dev/null
@@ -30,6 +30,7 @@ IP=$(nerdctl inspect --format '{{.NetworkSettings.IPAddress}}' "$NAME")
 for _ in $(seq 1 "$ROUNDS"); do
 nerdctl run \
   --rm \
+  $CCPUSET \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
   bash -c "iperf3 -c $IP -i 1 -t 10 && iperf3 -c $IP -u -i 1 -t 10" | tee -a "$LOGS/$NAME".log
 done

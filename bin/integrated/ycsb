@@ -17,7 +17,7 @@ nerdctl run -d \
   -m "$REALMEM" \
   --name "$NAME" \
   --cpus "$NSERVERS" \
-  $CPUSET \
+  $SCPUSET \
   --tmpfs /tmp \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
   bash -c "mv /var/lib/mysql /tmp/mysql && ${ZRUN:-} mysqld  --bind-address=0.0.0.0 --init-file=/ioperf/mysqld-init.sql --datadir=/tmp/mysql" &> /dev/null
@@ -29,6 +29,7 @@ IP=$(nerdctl inspect --format '{{.NetworkSettings.IPAddress}}' "$NAME")
 for _ in $(seq 1 "$ROUNDS"); do
 nerdctl run \
   --rm \
+  $CCPUSET \
   "toolmanp/go-ycsb-rocksdb-dockerized:22.04-zpoline" \
   bash -c "export workloads=\"a b c d e f\"; for w in \$workloads; do go-ycsb load mysql -p threadcount="$NCLIENTS" -p mysql.host="$IP" -p mysql.password=root -P /workloads/workload\$w && go-ycsb run mysql -p threadcount="$NCLIENTS" -p mysql.host="$IP" -p mysql.password=root -P /workloads/workload\$w; done" | tee -a "$LOGS/$NAME".log
 

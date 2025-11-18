@@ -17,7 +17,7 @@ nerdctl run -d \
   -m "$REALMEM" \
   --name "$NAME" \
   --cpus "$NSERVERS" \
-  $CPUSET \
+  $SCPUSET \
   --tmpfs /tmp \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
   ${ZRUN:-} netserver -D &> /dev/null
@@ -30,9 +30,9 @@ IP=$(nerdctl inspect --format '{{.NetworkSettings.IPAddress}}' "$NAME")
 for _ in $(seq 1 "$ROUNDS"); do
 nerdctl run \
   --rm \
+  $CCPUSET \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
   bash -c "export TESTS=\"TCP_STREAM TCP_RR UDP_STREAM UDP_RR\"; for test in \$TESTS; do netperf -H $IP -l 10s -t \$test; done" | tee -a "$LOGS/$NAME".log
-
 done
 
 sleep 1
