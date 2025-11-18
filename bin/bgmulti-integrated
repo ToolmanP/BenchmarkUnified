@@ -49,7 +49,7 @@ pids=()
 for i in $(seq 1 "$CONTAINERS"); do
   LNAME="$INTEGRATION-$NAME-$TIMESTAMP-$i-bg"
   if [[ $MODE == "multi-affinity" ]]; then
-    CPUSET="--cpuset-cpus=$(circular_seq "$i" "$NSERVERS" "$PROCS")"
+    CPUSET="--cpuset-cpus=$(circular_seq "$i" "$NSERVERS" "$CONTAINERS" "$PROCS")"
   else
     CPUSET=""
   fi

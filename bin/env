@@ -35,7 +35,8 @@ fi
 circular_seq() {
     local start=$1
     local len=$2
-    local mod=$3
+    local step=$3
+    local mod=$4
     if [[ -z "$start" || -z "$len" || -z "$mod" ]]; then
         echo "Usage: circular_seq <start> <length> <mod>" >&2
         return 1
@@ -46,7 +47,7 @@ circular_seq() {
     fi
     local seq=()
     for (( i = 0; i < len; i++ )); do
-        local val=$(( (start + i * len) % mod ))
+        local val=$(( (start + i * step) % mod ))
         seq+=("$val")
     done
     local IFS=,
