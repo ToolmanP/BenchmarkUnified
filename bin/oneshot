@@ -3,6 +3,10 @@
 TIMESTAMP=$(date +%s)
 IMAGE_CODE=""
 IMAGE=""
+ROUNDS=${ROUNDS:-1}
+NAME=${NAME:-dummy}
+RUNTIME=${RUNTIME:-"io.containerd.runc.v2"}
+EXTRA_FLAGS=${EXTRA_FLAGS:-""}
 
 . $ROOT/bin/env
 

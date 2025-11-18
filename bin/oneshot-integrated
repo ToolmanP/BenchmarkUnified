@@ -1,5 +1,9 @@
 #!/bin/bash
 
+ROUNDS=${ROUNDS:-1}
+NAME=${NAME:-dummy}
+RUNTIME=${RUNTIME:-"io.containerd.runc.v2"}
+
 if ! eval set -- "$(getopt -o r:n:i: --long rounds: -- "$@")"; then
   exit $?
 fi
