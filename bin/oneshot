@@ -55,7 +55,7 @@ done
 if [[ ! -z "${IMAGE_MAPPING[${IMAGE_CODE}]}" ]]; then
   IMAGE="${IMAGE_MAPPING[$IMAGE_CODE]}"
 else
-  echo "Error: Unknown image code '$IMAGE_CODE'" > &2
+  echo "Error: Unknown image code '$IMAGE_CODE'" >&2
   exit 1
 fi
 
