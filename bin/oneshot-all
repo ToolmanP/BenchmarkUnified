@@ -1,0 +1,82 @@
+#!/bin/bash
+
+RUNTIME_CODE="runc"
+NAME="dummy"
+ROUNDS=10
+NSERVERS=4
+NCLIENTS=4
+NTHREADS=4
+MEM="16G"
+RUNTIME=""
+
+. $ROOT/bin/env
+
+if ! eval set -- "$(getopt -o r:n:c:t:m: --long rounds:,pull -- "$@")"; then
+  exit $?
+fi
+
+while true; do
+  case $1 in
+    -r)
+      RUNTIME_CODE="$2"
+      shift 2
+      ;;
+    -m)
+      MEM="$2"
+      shift 2
+      ;;
+    -n)
+      NAME="$2"
+      shift 2
+      ;;
+    --pull)
+     for key in "${!IMAGE_MAPPING[@]}"; do
+        nerdctl pull "${IMAGE_MAPPING[$key]}"
+     done     
+     exit 0
+     ;;
+    --rounds)
+      ROUNDS="$2"
+      shift 2
+      ;;
+    -t)
+      NTHREADS="$2"
+      NSERVERS="$2"
+      shift 2
+      ;;
+    -c)
+      NCLIENTS="$2"
+      shift 2
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
+  esac
+done
+
+if [[ ! -z "${RUNTIME_MAPPING[${RUNTIME_CODE}]}" ]]; then
+  RUNTIME="${RUNTIME_MAPPING[$RUNTIME_CODE]}"
+else
+  echo "Error: Unknown runtime code '$RUNTIME_CODE'" >&2
+  exit 1
+fi
+
+export EXTRA_FLAGS="-m $MEM --cpus $NTHREADS"
+export ROUNDS NAME NTHREADS NSERVERS NCLIENTS MEM RUNTIME
+
+# $ROOT/bin/oneshot -i unixbench -- "syscall 10 close"
+# $ROOT/bin/oneshot -i sqlitebench -- "sqlite-bench --db=/tmp/"
+# $ROOT/bin/oneshot -i blogbench -- "blogbench -d /tmp/ --iterations=1"
+$ROOT/bin/oneshot -i vmitosis -- "bench_btree_mt && bench_gups_toy && bench_xsbench_mt"
+# $ROOT/bin/oneshot -i renaissance -- "java -jar renaissance-gpl.jar -r 1 all"
+# $ROOT/bin/oneshot -i specjbb -- "java -jar specjbb2015.jar -m COMPOSITE"
+# $ROOT/bin/oneshot-integrated -i redis
+# $ROOT/bin/oneshot-integrated -i ycsb
+# $ROOT/bin/oneshot-integrated -i memcached
+# $ROOT/bin/oneshot-integrated -i iperf
+# $ROOT/bin/oneshot-integrated -i netperf

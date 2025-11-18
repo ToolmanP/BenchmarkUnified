@@ -1,0 +1,60 @@
+#!/bin/bash
+
+TIMESTAMP=$(date +%s)
+IMAGE_CODE=""
+IMAGE=""
+
+. $ROOT/bin/env
+
+spawn_container() {
+  local CONTAINER_NAME=$1
+  shift 1
+  nerdctl run \
+    -it \
+    --rm \
+    $EXTRA_FLAGS \
+    --tmpfs /tmp \
+    --name "$CONTAINER_NAME" \
+    --runtime "$RUNTIME" \
+    "$IMAGE" ${ZRUN:-} bash -c "$@" | tee "${LOGS}/${CONTAINER_NAME}-multiround.log"
+}
+
+if ! eval set -- "$(getopt -o r:n:i: --long rounds: -- "$@")"; then
+  exit $?
+fi
+
+while true; do
+  case $1 in
+    --rounds)
+      ROUNDS="$2"
+      shift 2
+      ;;
+    -n)
+      NAME="$2"
+      shift 2
+      ;;
+    -i)
+      IMAGE_CODE="$2"
+      shift 2
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
+  esac
+done
+
+if [[ ! -z "${IMAGE_MAPPING[${IMAGE_CODE}]}" ]]; then
+  IMAGE="${IMAGE_MAPPING[$IMAGE_CODE]}"
+else
+  echo "Error: Unknown image code '$IMAGE_CODE'" >&2
+  exit 1
+fi
+
+for _ in $(seq 1 "$ROUNDS"); do
+  spawn_container "$IMAGE_CODE-$NAME-$TIMESTAMP" "$@"
+done

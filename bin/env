@@ -1,0 +1,31 @@
+#!/bin/bash
+
+declare -A IMAGE_MAPPING
+declare -A RUNTIME_MAPPING
+
+IMAGE_MAPPING=( 
+  ["sqlitebench"]="toolmanp/sqlite-bench-dockerized:22.04-zpoline"
+  ["blogbench"]="toolmanp/blogbench-dockerized:22.04-zpoline"
+  ["unixbench"]="toolmanp/unixbench-dockerized:22.04-zpoline"
+  ["renaissance"]="toolmanp/renaissance-dockerized:22.04-zpoline"
+  ["vmitosis"]="toolmanp/vmitosis-dockerized:22.04-zpoline"
+  ["specjbb"]="toolmanp/jbb2015-dockerized:22.04-zpoline"
+  ["ycsb"]="toolmanp/go-ycsb-rocksdb-dockerized:22.04-zpoline"
+  ["ioperf"]="toolmanp/ioperf-dockerized:22.04-zpoline"
+)
+
+RUNTIME_MAPPING=(
+  ["runc"]="io.containerd.runc.v2"
+  ["runsc"]="io.containerd.runsc.v1"
+  ["runv"]="io.containerd.kata.v2"
+)
+
+if command -v waitpid &> /dev/null; then
+  waitpid() {
+    while kill -0 "$2" &> /dev/null; do
+      sleep 1
+    done
+  }
+fi
+
+export IMAGE_MAPPING RUNTIME_MAPPING
