@@ -28,10 +28,9 @@ IP=$(nerdctl inspect --format '{{.NetworkSettings.IPAddress}}' "$NAME")
 # Client Side Benchmarking (Use native runc)
 for _ in $(seq 1 "$ROUNDS"); do
 nerdctl run \
-  -it \
   --rm \
   "toolmanp/go-ycsb-rocksdb-dockerized:22.04-zpoline" \
-  go-ycsb load mysql -p threadcount="$NCLIENTS" -p mysql.host="$IP" -p mysql.password=root -P /workloads/workload_large | tee "$LOGS/$NAME".log
+  go-ycsb load mysql -p threadcount="$NCLIENTS" -p mysql.host="$IP" -p mysql.password=root -P /workloads/workload_large | tee -a "$LOGS/$NAME".log
 done
 
 sleep 1

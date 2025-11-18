@@ -29,10 +29,9 @@ IP=$(nerdctl inspect --format '{{.NetworkSettings.IPAddress}}' "$NAME")
 # Client Side Benchmarking (Use native runc)
 for _ in $(seq 1 "$ROUNDS"); do
 nerdctl run \
-  -it \
   --rm \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
-  memslap -s "$IP:11211" -c "$NCLIENTS" -e 100000 | tee "$LOGS/$NAME".log
+  memslap -s "$IP:11211" -c "$NCLIENTS" -e 100000 | tee -a "$LOGS/$NAME".log
 done
 
 sleep 1

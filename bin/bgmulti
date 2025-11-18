@@ -1,0 +1,133 @@
+#!/bin/bash
+
+set -ex
+NTHREADS=${NTHREADS:-4}
+MEM=${MEM:-16G}
+NAME=${NAME-dummy}
+TIMESTAMP=$(date +%s)
+ROUNDS=${ROUNDS:-1}
+
+RUNTIME=${RUNTIME-io.containerd.runc.v2}
+EXTRA_FLAGS=${EXTRA_FLAGS:-""}
+CONTAINERS=${CONTAINERS:-4}
+IMAGE_CODE=""
+IMAGE=""
+MODE="multi"
+
+. $ROOT/bin/env
+
+spawn_container() {
+  local CONTAINER_NAME=$1
+  shift 1
+  nerdctl run \
+    --rm \
+    $EXTRA_FLAGS \
+    --cpus ${NTHREADS} \
+    -m  ${MEM} \
+    --tmpfs /tmp \
+    --name "$CONTAINER_NAME" \
+    --runtime "$RUNTIME" \
+    "$IMAGE" bash -c "$@" &>> "$LOGS/$CONTAINER_NAME-bg".log &
+  echo $!
+}
+
+spawn_container_cpuset() {
+  local CONTAINER_NAME=$1
+  local CONTAINER_INDEX=$2
+  local CPUSET="$(circular_seq "$CONTAINER_INDEX" "$NTHREADS" "$PROCS")"
+  shift 2
+  nerdctl run \
+    --rm \
+    $EXTRA_FLAGS \
+    --cpus ${NTHREADS} \
+    -m ${MEM} \
+    --tmpfs /tmp \
+    --name "$CONTAINER_NAME" \
+    --cpuset-cpus "$CPUSET" \
+    --runtime "$RUNTIME" \
+    "$IMAGE" bash -c "$@" &>> "$LOGS/$CONTAINER_NAME-bg".log &
+  echo $!
+}
+
+spawn_multi() {
+  for _ in $(seq 1 $ROUNDS); do
+    local pid
+    local pids=()
+    for i in $(seq 1 "$CONTAINERS"); do 
+      pid=$(spawn_container "$IMAGE_CODE-$NAME-$TIMESTAMP-$i" "$@")
+      pids+=("$pid")
+    done
+    for pid in "${pids[@]}"; do
+      waitpid -e "$pid"
+    done
+  done
+}
+
+spawn_multi_affinity() {
+  for _ in $(seq 1 $ROUNDS); do
+    local pid
+    local pids=()
+    for i in $(seq 1 "$CONTAINERS"); do 
+      pid=$(spawn_container_cpuset "$IMAGE_CODE-$NAME-$TIMESTAMP-$i" "$i" "$@")
+      pids+=("$pid")
+    done
+    
+    for pid in "${pids[@]}"; do
+      waitpid -e "$pid"
+    done
+  done
+}
+
+if ! eval set -- "$(getopt -o i: --long help,affinity,rounds: -- "$@")"; then
+  exit $?
+fi
+
+while true; do
+  case $1 in
+    -h|--help)
+      echo "Usage: $0 [-h|--help] [--affinity] [-i IMAGE] -- [IMAGE_OPTS...]"
+      exit 0
+      ;;
+    -i)
+      IMAGE_CODE="$2"
+      shift 2
+      ;;
+    -a|--affinity)
+      MODE="multi-affinity"
+      shift
+      ;;
+    --rounds)
+      ROUNDS="$2"
+      shift 2
+      ;;
+    -n)
+      NAME="$2"
+      shift 2
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
+  esac
+done
+
+if [[ ! -z "${IMAGE_MAPPING[${IMAGE_CODE}]}" ]]; then
+  IMAGE="${IMAGE_MAPPING[$IMAGE_CODE]}"
+else
+  echo "Error: Unknown image code '$IMAGE_CODE'" >&2
+  exit 1
+fi
+
+case "$MODE" in 
+  multi)
+    spawn_multi "$@"
+    ;;
+  multi-affinity)
+    spawn_multi_affinity "$@"
+    ;;
+esac
+

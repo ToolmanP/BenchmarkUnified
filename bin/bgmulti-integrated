@@ -1,0 +1,63 @@
+#!/bin/bash
+
+set -ex
+TIMESTAMP=$(date +%s)
+MODE="multi"
+
+. "$ROOT"/bin/env
+
+if ! eval set -- "$(getopt -o n:i: --long rounds:,affinity -- "$@")"; then
+  exit $?
+fi
+
+while true; do
+  case $1 in
+    --rounds)
+      ROUNDS="$2"
+      shift 2
+      ;;
+    --affinity)
+      MODE="multi-affinity"
+      shift
+      ;;
+    -n)
+      NAME="$2"
+      shift 2
+      ;;
+    -i)
+      INTEGRATION="$2"
+      shift 2
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
+  esac
+done
+
+PROG="$ROOT/bin/integrated/$INTEGRATION"
+
+if [[ ! -f $PROG ]]; then
+  echo "File $PROG does not exist" >&2
+  exit 
+fi
+
+pids=()
+for i in $(seq 1 "$CONTAINERS"); do
+  LNAME="$INTEGRATION-$NAME-$TIMESTAMP-$i-bg"
+  if [[ $MODE == "multi-affinity" ]]; then
+    CPUSET="--cpuset-cpus=$(circular_seq "$i" "$NSERVERS" "$PROCS")"
+  else
+    CPUSET=""
+  fi
+  env CPUSET="$CPUSET" NAME="$LNAME" "$PROG" &> /dev/null &
+  pids+=("$!")
+done
+
+for pid in "${pids[@]}"; do
+  waitpid -e "$pid"
+done

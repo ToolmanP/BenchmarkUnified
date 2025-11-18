@@ -29,10 +29,9 @@ IP=$(nerdctl inspect --format '{{.NetworkSettings.IPAddress}}' "$NAME")
 # Client Side Benchmarking (Use native runc)
 for _ in $(seq 1 "$ROUNDS"); do
 nerdctl run \
-  -it \
   --rm \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
-  bash -c "export TESTS=\"TCP_STREAM TCP_RR UDP_STREAM UDP_RR\"; for test in \$TESTS; do netperf -H $IP -l 10s -t \$test; done" | tee "$LOGS/$NAME".log
+  bash -c "export TESTS=\"TCP_STREAM TCP_RR UDP_STREAM UDP_RR\"; for test in \$TESTS; do netperf -H $IP -l 10s -t \$test; done" | tee -a "$LOGS/$NAME".log
 
 done
 

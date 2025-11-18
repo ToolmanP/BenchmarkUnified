@@ -3,6 +3,7 @@
 declare -A IMAGE_MAPPING
 declare -A RUNTIME_MAPPING
 
+PROCS=$(nproc)
 IMAGE_MAPPING=( 
   ["sqlitebench"]="toolmanp/sqlite-bench-dockerized:22.04-zpoline"
   ["blogbench"]="toolmanp/blogbench-dockerized:22.04-zpoline"
@@ -27,5 +28,26 @@ if command -v waitpid &> /dev/null; then
     done
   }
 fi
+
+circular_seq() {
+    local start=$1
+    local len=$2
+    local mod=$3
+    if [[ -z "$start" || -z "$len" || -z "$mod" ]]; then
+        echo "Usage: circular_seq <start> <length> <mod>" >&2
+        return 1
+    fi
+    if (( mod <= 0 || len <= 0 )); then
+        echo "Error: mod and length must be positive integers." >&2
+        return 1
+    fi
+    local seq=()
+    for (( i = 0; i < len; i++ )); do
+        local val=$(( (start + i * len) % mod ))
+        seq+=("$val")
+    done
+    local IFS=,
+    echo "${seq[*]}"
+}
 
 export IMAGE_MAPPING RUNTIME_MAPPING

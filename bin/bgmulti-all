@@ -1,0 +1,85 @@
+#!/bin/bash
+
+set -ex
+RUNTIME_CODE="runc"
+NAME="dummy"
+ROUNDS=1
+NSERVERS=4
+NCLIENTS=4
+NTHREADS=4
+MEM="16G"
+RUNTIME=""
+AFFINITY=""
+CONTAINERS=4
+
+. $ROOT/bin/env
+
+if ! eval set -- "$(getopt -o r:n:c:t:m: --long rounds:,affinity,count:,pull -- "$@")"; then
+  exit $?
+fi
+
+while true; do
+  case $1 in
+    -r)
+      RUNTIME_CODE="$2"
+      shift 2
+      ;;
+    -m)
+      MEM="$2"
+      shift 2
+      ;;
+    -n)
+      NAME="$2"
+      shift 2
+      ;;
+    --count)
+      CONTAINERS=$2
+      shift 2
+      ;;
+    --pull)
+     for key in "${!IMAGE_MAPPING[@]}"; do
+        nerdctl pull "${IMAGE_MAPPING[$key]}"
+     done     
+     exit 0
+     ;;
+    --affinity)
+      AFFINITY="--affinity"
+      shift
+      ;;
+    --rounds)
+      ROUNDS="$2"
+      shift 2
+      ;;
+    -t)
+      NTHREADS="$2"
+      NSERVERS="$2"
+      shift 2
+      ;;
+    -c)
+      NCLIENTS="$2"
+      shift 2
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
+  esac
+done
+
+if [[ ! -z "${RUNTIME_MAPPING[${RUNTIME_CODE}]}" ]]; then
+  RUNTIME="${RUNTIME_MAPPING[$RUNTIME_CODE]}"
+else
+  echo "Error: Unknown runtime code '$RUNTIME_CODE'" >&2
+  exit 1
+fi
+
+export LOGS="$LOGS/$NAME"
+mkdir -p $LOGS
+export ROUNDS NAME NTHREADS NSERVERS NCLIENTS MEM RUNTIME CONTAINERS
+
+# $ROOT/bin/bgmulti $AFFINITY -i unixbench -- "syscall 1 close"
+$ROOT/bin/bgmulti-integrated $AFFINITY -i redis
