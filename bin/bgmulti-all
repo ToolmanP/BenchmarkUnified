@@ -81,5 +81,5 @@ export LOGS="$LOGS/$NAME"
 mkdir -p $LOGS
 export ROUNDS NAME NTHREADS NSERVERS NCLIENTS MEM RUNTIME CONTAINERS
 
-# $ROOT/bin/bgmulti $AFFINITY -i unixbench -- "syscall 1 close"
+$ROOT/bin/bgmulti $AFFINITY -i unixbench -- "syscall 1 close"
 $ROOT/bin/bgmulti-integrated $AFFINITY -i redis

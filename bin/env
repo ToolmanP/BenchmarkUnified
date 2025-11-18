@@ -13,6 +13,9 @@ IMAGE_MAPPING=(
   ["specjbb"]="toolmanp/jbb2015-dockerized:22.04-zpoline"
   ["ycsb"]="toolmanp/go-ycsb-rocksdb-dockerized:22.04-zpoline"
   ["ioperf"]="toolmanp/ioperf-dockerized:22.04-zpoline"
+  ["will-it-scale"]="toolmanp/will-it-scale-dockerized:22.04-zpoline"
+  ["hackbench"]="toolmanp/hackbench-dockerized:22.04-zpoline"
+  ["microbench"]="toolmanp/microbench-dockerized:22.04-zpoline"
 )
 
 RUNTIME_MAPPING=(
