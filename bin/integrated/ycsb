@@ -22,7 +22,7 @@ nerdctl run -d \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
   bash -c "mv /var/lib/mysql /tmp/mysql && ${ZRUN:-} mysqld  --bind-address=0.0.0.0 --init-file=/ioperf/mysqld-init.sql --datadir=/tmp/mysql" &> /dev/null
 
-sleep 1
+sleep 10
 
 IP=$(nerdctl inspect --format '{{.NetworkSettings.IPAddress}}' "$NAME")
 # Client Side Benchmarking (Use native runc)

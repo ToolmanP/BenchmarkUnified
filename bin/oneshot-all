@@ -75,7 +75,7 @@ $ROOT/bin/oneshot -i unixbench -- "syscall 10 close"
 sleep 10
 $ROOT/bin/oneshot -i sqlitebench -- "sqlite-bench --db=/tmp/"
 sleep 10
-$ROOT/bin/oneshot -i blogbench -- "blogbench -d /tmp/ --iterations=3"
+$ROOT/bin/oneshot -i blogbench -- "blogbench -d /tmp/ --iterations=1"
 sleep 10
 $ROOT/bin/oneshot -i vmitosis -- "bench_btree_mt && bench_gups_toy && bench_xsbench_mt"
 sleep 10
