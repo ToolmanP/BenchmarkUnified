@@ -46,7 +46,7 @@ if [[ ! -f $PROG ]]; then
 fi
 
 pids=()
-for i in $(seq 1 "$CONTAINERS"); do
+for i in $(seq 0 $((CONTAINERS - 1))); do
   LNAME="$INTEGRATION-$NAME-$TIMESTAMP-$i-bg"
   if [[ $MODE == "multi-affinity" ]]; then
     CPUSET="--cpuset-cpus=$(circular_seq "$i" "$NSERVERS" "$CONTAINERS" "$PROCS")"
