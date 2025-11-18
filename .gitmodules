@@ -34,3 +34,7 @@
 	path = ycsb
 	url = https://github.com/ToolmanP/go-ycsb-rocksdb-dockerized.git
 	branch = runpv
+[submodule "hackbench"]
+	path = hackbench
+	url = https://github.com/ToolmanP/hackbench-dockerized.git
+	branch = runpv
