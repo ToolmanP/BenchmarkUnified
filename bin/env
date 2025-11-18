@@ -24,7 +24,7 @@ RUNTIME_MAPPING=(
   ["runv"]="io.containerd.kata.v2"
 )
 
-if command -v waitpid &> /dev/null; then
+if ! command -v waitpid &> /dev/null; then
   waitpid() {
     while kill -0 "$2" &> /dev/null; do
       sleep 1
