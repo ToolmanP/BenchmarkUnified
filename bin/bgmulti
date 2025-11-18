@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -ex
 NTHREADS=${NTHREADS:-4}
 MEM=${MEM:-16G}
 NAME=${NAME-dummy}
@@ -78,7 +77,7 @@ spawn_multi_affinity() {
   done
 }
 
-if ! eval set -- "$(getopt -o i: --long help,affinity,rounds: -- "$@")"; then
+if ! eval set -- "$(getopt -o i:n: --long help,affinity,rounds: -- "$@")"; then
   exit $?
 fi
 

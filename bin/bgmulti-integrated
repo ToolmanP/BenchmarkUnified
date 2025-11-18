@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -ex
 TIMESTAMP=$(date +%s)
 MODE="multi"
 
