@@ -47,7 +47,7 @@ fi
 
 pids=()
 for i in $(seq 0 2 $((CONTAINERS - 1))); do
-  LNAME="$INTEGRATION-$NAME-$TIMESTAMP-$i-bg"
+  LNAME="$INTEGRATION-$NAME-$TIMESTAMP-$((i/2))-bg"
   if [[ $MODE == "multi-affinity" ]]; then
     SCPUSET="--cpuset-cpus=$(circular_seq "$i" "$NSERVERS" "$CONTAINERS" "$PROCS")"
     CCPUSET="--cpuset-cpus=$(circular_seq "$((i+1))" "$NSERVERS" "$CONTAINERS" "$PROCS")"

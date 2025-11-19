@@ -9,6 +9,7 @@ REALMEM=$(echo "$MEM" | cut -d G -f 1)
 REALMEM="$((REALMEM + 1))G"
 NSERVERS=${NSERVERS:-4}
 NCLIENTS=${NCLIENTS:-4}
+SCALE=${SCALE:-1}
 
 # Server Side Initialization (Just use the temporary filesystem)
 nerdctl run -d \
@@ -32,7 +33,7 @@ nerdctl run \
   --rm \
   $CCPUSET \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
-  bash -c "export TESTS=\"TCP_STREAM TCP_RR UDP_STREAM UDP_RR\"; for test in \$TESTS; do netperf -H $IP -l 10s -t \$test; done" | tee -a "$LOGS/$NAME".log
+  bash -c "export TESTS=\"TCP_STREAM TCP_RR UDP_STREAM UDP_RR\"; for test in \$TESTS; do netperf -H $IP -l $((SCALE * 20))s -t \$test; done" | tee -a "$LOGS/$NAME".log
 done
 
 sleep 1

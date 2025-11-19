@@ -9,6 +9,7 @@ REALMEM=$(echo "$MEM" | cut -d G -f 1)
 REALMEM="$((REALMEM + 1))G"
 NSERVERS=${NSERVERS:-4}
 NCLIENTS=${NCLIENTS:-4}
+SCALE=${SCALE:-1}
 
 # Server Side Initialization (Just use the temporary filesystem)
 nerdctl run -d \
@@ -32,7 +33,7 @@ nerdctl run \
   --rm \
   $CCPUSET \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
-  bash -c "iperf3 -c $IP -i 1 -t 10 && iperf3 -c $IP -u -i 1 -t 10" | tee -a "$LOGS/$NAME".log
+  bash -c "iperf3 -c $IP -i 1 -t 10 && iperf3 -c $IP -u -i 1 -t $((20 * SCALE))" | tee -a "$LOGS/$NAME".log
 done
 
 sleep 1

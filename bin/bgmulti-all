@@ -80,21 +80,16 @@ fi
 export LOGS="$LOGS/$NAME"
 mkdir -p $LOGS
 export ROUNDS NAME NTHREADS NSERVERS NCLIENTS MEM RUNTIME CONTAINERS
+export SCALE=$(((CONTAINERS + 7) / 8))
 
-scale_cases="brk1 brk2 context_switch1 dup1 eventfd1 futex1 fallocate1 getppid1 futex2 fallocate2 futex3 lock1 futex4 lseek1 malloc1 lock2 lseek2 malloc2 page_fault2 open1 mmap2 open2 mmap1 poll1 page_fault1 open3 page_fault3 pipe1 pread1 posix_semaphore1 pread2 poll2 pread3 pthread_mutex2 pthread_mutex1 pthread_mutex3 pwrite3 pwrite2 pthread_mutex4 read1 pthread_mutex5 pwrite1 sched_yield read4 read3 read2 readseek1 readseek3 readseek2 tlb_flush1 unlink1 signal1 tlb_flush3 tlb_flush2 unlink2 unix1 write1 writeseek1 writeseek2 writeseek3"
-for case in $scale_cases; do
-$ROOT/bin/bgmulti $AFFINITY -i will-it-scale -n $case -- "./${case}_processes -s 20 -w 20 -t $NTHREADS"
-sleep 10
-done
+# scale_cases="lock2 pwrite2 eventfd1 writeseek2 page_fault2 pipe1 unlink1 open1 open3 open2 unlink2 pread2 fallocate1"
+# for case in $scale_cases; do
+#   $ROOT/bin/bgmulti $AFFINITY -i will-it-scale -n $case -- "./${case}_processes -s 20 -w 20 -t $((20 * SCALE))"
+# sleep 10
+# done
 
-$ROOT/bin/bgmulti $AFFINITY -i hackbench -- "hackbench -pTl 10000"
-sleep 10
-$ROOT/bin/bgmulti-integrated $AFFINITY -i redis
-sleep 10
 $ROOT/bin/bgmulti-integrated $AFFINITY -i ycsb
 sleep 10
 $ROOT/bin/bgmulti-integrated $AFFINITY -i memcached
-sleep 10
-$ROOT/bin/bgmulti-integrated $AFFINITY -i iperf
 sleep 10
 $ROOT/bin/bgmulti-integrated $AFFINITY -i netperf

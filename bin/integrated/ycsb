@@ -9,6 +9,7 @@ REALMEM=$(echo "$MEM" | cut -d G -f 1)
 REALMEM="$((REALMEM + 1))G"
 NSERVERS=${NSERVERS:-4}
 NCLIENTS=${NCLIENTS:-4}
+SCALE=${SCALE:-1}
 
 # Server Side Initialization (Just use the temporary filesystem)
 nerdctl run -d \
@@ -31,7 +32,7 @@ nerdctl run \
   --rm \
   $CCPUSET \
   "toolmanp/go-ycsb-rocksdb-dockerized:22.04-zpoline" \
-  bash -c "export workloads=\"a b c d e f\"; for w in \$workloads; do go-ycsb load mysql -p threadcount="$NCLIENTS" -p mysql.host="$IP" -p mysql.password=root -P /workloads/workload\$w && go-ycsb run mysql -p threadcount="$NCLIENTS" -p mysql.host="$IP" -p mysql.password=root -P /workloads/workload\$w; done" | tee -a "$LOGS/$NAME".log
+  bash -c "export workloads=\"a b c d e f\"; for w in \$workloads; do go-ycsb load mysql -p threadcount="$NCLIENTS" -p recordcount=100000 -p operationcount=$((100000 * SCALE)) -p mysql.host="$IP" -p mysql.password=root -P /workloads/workload\$w && go-ycsb run mysql -p recordcount=100000 operationcount=$((100000 * SCALE)) threadcount="$NCLIENTS" -p mysql.host="$IP" -p mysql.password=root -P /workloads/workload\$w; done" | tee -a "$LOGS/$NAME".log
 
 done
 
