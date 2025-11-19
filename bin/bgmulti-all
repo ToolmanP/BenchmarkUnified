@@ -11,7 +11,7 @@ RUNTIME=""
 AFFINITY=""
 CONTAINERS=4
 
-. $ROOT/bin/env
+. "$ROOT"/bin/env
 
 if ! eval set -- "$(getopt -o r:n:c:t:m: --long rounds:,affinity,count:,pull -- "$@")"; then
   exit $?
@@ -77,18 +77,18 @@ else
 fi
 
 export LOGS="$LOGS/$NAME"
-mkdir -p $LOGS
+mkdir -p "$LOGS"
 export ROUNDS NAME NTHREADS NSERVERS NCLIENTS MEM RUNTIME CONTAINERS
 export SCALE=$(((CONTAINERS + 7) / 8))
 
-# scale_cases="lock2 pwrite2 eventfd1 writeseek2 page_fault2 pipe1 unlink1 open1 open3 open2 unlink2 pread2 fallocate1"
-# for case in $scale_cases; do
-#   $ROOT/bin/bgmulti $AFFINITY -i will-it-scale -n $case -- "./${case}_processes -s 20 -w 20 -t $((20 * SCALE))"
-# sleep 10
-# done
+scale_cases="lock2 pwrite2 eventfd1 writeseek2 page_fault2 pipe1 unlink1 open1 open3 open2 unlink2 pread2 fallocate1"
+for case in "${scale_cases[@]}"; do
+  "$ROOT"/bin/bgmulti "$AFFINITY" -i will-it-scale -n "$case" -- "./${case}_processes -s 20 -w 20 -t $((20 * SCALE))"
+sleep 10
+done
 
-$ROOT/bin/bgmulti-integrated $AFFINITY -i ycsb
+"$ROOT"/bin/bgmulti-integrated "$AFFINITY" -i ycsb
 sleep 10
-$ROOT/bin/bgmulti-integrated $AFFINITY -i memcached
+"$ROOT"/bin/bgmulti-integrated "$AFFINITY" -i memcached
 sleep 10
-$ROOT/bin/bgmulti-integrated $AFFINITY -i netperf
+"$ROOT"/bin/bgmulti-integrated "$AFFINITY" -i netperf
