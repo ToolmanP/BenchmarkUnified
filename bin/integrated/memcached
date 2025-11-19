@@ -33,7 +33,7 @@ nerdctl run \
   --rm \
   $CCPUSET \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
-  memaslap -s "$IP:11211" -c "$NCLIENTS" -T "$NCLIENTS" -t "$((20 * SCALE))S" | tee -a "$LOGS/$NAME".log
+  memaslap -s "$IP:11211" -c "$NCLIENTS" -T "$NCLIENTS" -o 0.5 -e 0.5 -t "$((20 * SCALE))S" | tee -a "$LOGS/$NAME".log
 done
 
 sleep 1
