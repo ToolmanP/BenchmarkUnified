@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -ex
 RUNTIME_CODE="runc"
 NAME="dummy"
 ROUNDS=1
