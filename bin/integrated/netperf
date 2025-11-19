@@ -19,7 +19,7 @@ nerdctl run -d \
   --name "$NAME" \
   --cpus "$NSERVERS" \
   $SCPUSET \
-  --tmpfs /tmp \
+  --tmpfs /tmp:size=$MEM \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
   ${ZRUN:-} netserver -D &> /dev/null
 

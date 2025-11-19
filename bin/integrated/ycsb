@@ -19,7 +19,7 @@ nerdctl run -d \
   --name "$NAME" \
   --cpus "$NSERVERS" \
   $SCPUSET \
-  --tmpfs /tmp \
+  --tmpfs /tmp:size=$MEM \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
   bash -c "mv /var/lib/mysql /tmp/mysql && ${ZRUN:-} mysqld  --bind-address=0.0.0.0 --init-file=/ioperf/mysqld-init.sql --datadir=/tmp/mysql" &> /dev/null
 

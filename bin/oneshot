@@ -6,6 +6,7 @@ IMAGE=""
 ROUNDS=${ROUNDS:-1}
 NAME=${NAME:-dummy}
 RUNTIME=${RUNTIME:-"io.containerd.runc.v2"}
+MEM=${MEM:-"16G"}
 EXTRA_FLAGS=${EXTRA_FLAGS:-""}
 
 . $ROOT/bin/env
@@ -17,7 +18,7 @@ spawn_container() {
     -it \
     --rm \
     $EXTRA_FLAGS \
-    --tmpfs /tmp \
+    --tmpfs /tmp:size=$MEM \
     --name "$CONTAINER_NAME" \
     --runtime "$RUNTIME" \
     "$IMAGE" ${ZRUN:-} bash -c "$@" | tee -a "${LOGS}/${CONTAINER_NAME}-multiround.log"

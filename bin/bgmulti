@@ -9,6 +9,7 @@ ROUNDS=${ROUNDS:-1}
 RUNTIME=${RUNTIME-io.containerd.runc.v2}
 EXTRA_FLAGS=${EXTRA_FLAGS:-""}
 CONTAINERS=${CONTAINERS:-4}
+MEM=${MEM:-"16G"}
 IMAGE_CODE=""
 IMAGE=""
 MODE="multi"
@@ -23,7 +24,7 @@ spawn_container() {
     $EXTRA_FLAGS \
     --cpus ${NTHREADS} \
     -m  ${MEM} \
-    --tmpfs /tmp \
+    --tmpfs /tmp:size=$MEM \
     --name "$CONTAINER_NAME" \
     --runtime "$RUNTIME" \
     "$IMAGE" bash -c "$@" &>> "$LOGS/$CONTAINER_NAME-bg".log &
