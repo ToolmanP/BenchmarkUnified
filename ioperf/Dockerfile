@@ -2,9 +2,9 @@ FROM toolmanp/ubuntu:22.04-zpoline AS builder
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt update && apt upgrade -y
 RUN apt install libevent-dev libtbb2-dev build-essential cmake wget flex bison -y
-RUN wget https://github.com/awesomized/libmemcached/archive/refs/tags/1.1.4.tar.gz && tar -xvf 1.1.4.tar.gz
+ADD libmemcached libmemcached
 WORKDIR /build
-RUN cmake ../libmemcached-1.1.4
+RUN cmake ../libmemcached -DCMAKE_BUILD_TYPE=Release
 RUN make -j$(nproc)
 RUN make install
 

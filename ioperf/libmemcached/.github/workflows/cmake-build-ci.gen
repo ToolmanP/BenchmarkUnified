@@ -1,0 +1,522 @@
+#!/usr/bin/env php
+<?php
+
+echo "# Generated file; do not edit!\n";
+
+const DEF = [
+  "os" => "Linux",
+
+  "Linux"   => "ubuntu-22.04", "ubuntu-22.04" => "gnu",
+  "Windows" => "windows-2022", "windows-2022" => "msvc",
+  "macOS"   => "macos-12",     "macos-12"     => "clang",
+
+  "gnu" => [
+    "CC"  => "gcc",
+    "CXX"  => "g++",
+  ],
+  "clang" => [
+    "CC"  => "clang",
+    "CXX"  => "clang++",
+  ],
+  "msvc" => [
+    "CMAKE_GENERATOR" => "Visual Studio"
+  ],
+  "mingw" => [
+    "CMAKE_GENERATOR" => "MinGW Makefiles"
+  ]
+];
+const MAP = [
+  "Linux" => [
+    'env.OS_VER' => [
+      "ubuntu-22.04" => [
+        'env.CC_VND' => [
+          "gnu" => [
+            'env.CC_VER' => [
+              "new"  => "-12",
+              "cur"  => "-11",
+              "old"  => "-10",
+            ]
+          ],
+          "clang" => [
+            'env.CC_VER' => [
+              "new"  => "-14",
+              "cur"  => "-13",
+            ]
+          ]
+        ]
+      ],
+      "ubuntu-20.04" => [
+        'env.CC_VND' => [
+          "gnu" => [
+            'env.CC_VER' => [
+              "new"  => "-10",
+              "cur"  => "-9",
+            ]
+          ],
+          "clang" => [
+            'env.CC_VER' => [
+              "new"  => "-12",
+              "cur"  => "-11",
+              "old"  => "-10"
+            ]
+          ]
+        ]
+      ],
+    ],
+  ],
+  "Windows" => [
+    'env.OS_VER' => [
+      "windows-2022" => [
+        'env.CC_VND' => [
+          "msvc" => [
+            "env.CC_VER" => [
+              "cur" => " 17 2022"
+            ]
+          ],
+          "mingw" => [
+            "env.CC_VER" => [
+              "cur" => ""
+            ]
+          ]
+        ]
+      ],
+      "windows-2019" => [
+        'env.CC_VND' => [
+          "msvc" => [
+            "env.CC_VER" => [
+              "cur" => " 16 2019"
+            ]
+          ],
+          "mingw" => [
+            "env.CC_VER" => [
+              "cur" => ""
+            ]
+          ]
+        ]
+      ],
+    ]
+  ],
+  "macOS" => []
+];
+const ENV = [
+  "ubuntu-22.04" => [
+    "clang" => [
+      "new" => [
+        "CXXFLAGS" => "-stdlib=libc++",
+        "INSTALL_CXX" => "libc++-14-dev libc++abi-14-dev"
+      ],
+      "cur" => [
+        "CXXFLAGS" => "-stdlib=libc++",
+        "INSTALL_CXX" => "libc++-13-dev libc++abi-13-dev"
+      ],
+    ]
+  ],
+  "ubuntu-20.04" => [
+    "clang" => [
+      "new" => [
+        "CXXFLAGS" => "-stdlib=libc++",
+        "INSTALL_CXX" => "libc++-12-dev libc++abi-12-dev"
+      ],
+      "cur" => [
+        "CXXFLAGS" => "-stdlib=libc++",
+        "INSTALL_CXX" => "libc++-11-dev libc++abi-11-dev"
+      ],
+      "old" => [
+        "CXXFLAGS" => "-stdlib=libc++",
+        "INSTALL_CXX" => "libc++-10-dev libc++abi-10-dev"
+      ],
+    ]
+  ],
+];
+
+function set_addpath($os_vnd, $paths) {
+  foreach ((array) $paths as $path) if ($os_vnd == "Windows") {
+?>
+          echo "<?=$path?>" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+<?php
+  } else {
+?>
+          echo 'PATH="$PATH:<?=$path?>"' >> ${GITHUB_ENV}
+<?php
+  }
+}
+function step_setenv($os_vnd, $var, $val) {
+  if ($var === "PATH") {
+    return set_addpath($os_vnd, $val);
+  }
+  if ($os_vnd == "Windows") {
+?>
+          echo '<?=$var?>=<?=$val?>' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+<?php
+  } else {
+?>
+          echo <?=$var?>="<?=$val?>" >> ${GITHUB_ENV}
+<?php
+  }
+}
+
+/**
+ * @var bool $splat_map false = no splat map, null = default splat map, true = full splat map
+ */
+function steps_setenv($os_vnd, $splat_map = null) {
+  if ($os_vnd === "Windows") {
+?>
+      - name: Prepare environment (Windows)
+        run: |
+          echo "c:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "c:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+<?php
+  }
+  if ($splat_map !== false) {
+    foreach (MAP[$os_vnd] as $os_is => $os_vers) {
+      foreach ($os_vers as $os_ver => $cc_vnds_) {
+        if (!$splat_map && DEF[DEF["os"]] != $os_ver) continue;
+        foreach ($cc_vnds_ as $cc_vnd_is => $cc_vnds) {
+          foreach ($cc_vnds as $cc_vnd => $cc_vers_) {
+            if (!$splat_map && DEF[DEF[DEF["os"]]] != $cc_vnd) continue;
+            foreach ($cc_vers_ as $cc_ver_is => $cc_vers) {
+              foreach ($cc_vers as $cc_ver => $ver) {
+                if (!$splat_map && "cur" != $cc_ver) continue;
+?>
+      - name: Prepare environment (<?= "for $cc_ver $cc_vnd on $os_ver" ?>)
+        if: (<?="$os_is=='$os_ver') && ($cc_vnd_is=='$cc_vnd') && ($cc_ver_is=='$cc_ver'"?>)
+        run: |
+<?php
+                foreach (DEF[$cc_vnd] as $env => $val) {
+                  step_setenv($os_vnd, $env, $val . $ver);
+                }
+                if (isset(ENV[$os_ver][$cc_vnd][$cc_ver])) {
+                  foreach (ENV[$os_ver][$cc_vnd][$cc_ver] as $env => $val) {
+                    step_setenv($os_vnd, $env, $val);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+function steps_getdeps($os_vnd) {
+?>
+      - name: Install dependencies (<?=$os_vnd?>)
+        if: runner.os == '<?=$os_vnd?>'
+<?php
+  if ($os_vnd === "Linux") :
+?>
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -my \
+            libevent-dev \
+            libsasl2-dev \
+            libtbb-dev \
+            python3-sphinx \
+            ${INSTALL_MEMCACHED} \
+            ${INSTALL_CC} ${INSTALL_CXX}
+          sudo systemctl stop memcached || true
+<?php
+  endif;
+  if ($os_vnd === "macOS") :
+?>
+        run: |
+          brew install bison flex libevent pkg-config sphinx-doc ${INSTALL_MEMCACHED}
+          brew services stop memcached || true
+          echo MEMCACHED_BINARY="/usr/local/bin/memcached" >> ${GITHUB_ENV}
+<?php
+  endif;
+  if ($os_vnd === "Windows") :
+?>
+        uses: msys2/setup-msys2@v2
+        with:
+          release: false
+          path-type: inherit
+          install: >-
+            bison
+            flex
+            rsync
+            openssh
+<?php
+  endif;
+  if ($os_vnd != "Windows") :
+?>
+      - name: Build memcached
+        if: runner.os != 'Windows'
+        run: |
+          if test -d memcached
+          then
+            cd memcached
+            ./autogen.sh
+            cp configure{,.old} && sed -e 's/-Werror//g' <configure.old >configure
+            ./configure CFLAGS="-O2 -pipe -fcommon" \
+              --prefix=${MEMCACHED_PREFIX} \
+              --enable-sasl \
+              --enable-sasl-pwdb \
+              --disable-coverage \
+              --disable-dependency-tracking \
+              --disable-docs \
+              --disable-extstore \
+              --disable-option-checking \
+              ;
+            make -j2
+            make install
+            cd ..
+            echo MEMCACHED_BINARY="${MEMCACHED_PREFIX}/bin/memcached" >> ${GITHUB_ENV}
+          fi
+<?php
+  endif;
+}
+
+function steps_build() {
+?>
+      - name: Generate build tree (${{ env.CMAKE_BUILD_TYPE }})
+        run: cmake -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} -S . -B build
+      - name: Build all with ${{ env.CXX }} ${{ env.CXXFLAGS }}
+        run: cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j2
+<?php
+}
+
+function steps_test() {
+?>
+      - name: Test
+        if: env.BUILD_TESTING == 'ON'
+        run: cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j2 --target test
+      - name: Install
+        if: env.BUILD_TESTING == 'ON'
+        run: cmake --install build --config ${{ env.CMAKE_BUILD_TYPE }} --prefix /tmp
+      - name: Failed tests log
+        if: ${{ env.BUILD_TESTING == 'ON' && failure() }}
+        run: cat build/Testing/Temporary/LastTest.log || true
+<?php
+}
+
+function steps_package() {
+?>
+      - name: Package
+        env:
+          PUSH_ARTIFACTS_ID: ${{ secrets.PUSH_ARTIFACTS_ID }}
+        if: env.PUSH_ARTIFACTS_ID != '' && env.CMAKE_BUILD_TYPE == 'Release'
+        run: |
+          cmake -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} -S . -B build
+          cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j2 --target package
+          cmake -DCPACK_COMPONENT_INSTALL=ON build
+          cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j2 --target package
+          cmake --build build --config ${{ env.CMAKE_BUILD_TYPE }} -j2 --target push-artifacts
+<?php
+}
+
+function steps_notify($os_vnd) {
+?>
+      - name: Notify Gitter
+        env:
+          GITTER: ${{ secrets.GITTER }}
+        if: (success() || failure()) && env.GITTER != ''
+        run: bash .github/notify-gitter.sh ${{ job.status }}
+<?php
+}
+
+function steps($os_vnd, $splat_map = null) {
+  steps_setenv($os_vnd, $splat_map);
+  steps_getdeps($os_vnd);
+  steps_build();
+  steps_test();
+  steps_package();
+  steps_notify($os_vnd);
+}
+
+function defaults($os_vnd = DEF["os"]) {
+  $os_ver = DEF[$os_vnd];
+  $cc_vnd = DEF[$os_ver];
+  return "$os_ver, $cc_vnd";
+}
+
+function env_override($os_vnd, $cc_vnd = null) {
+  isset($cc_vnd) or $cc_vnd = DEF[DEF[$os_vnd]];
+?>
+      OS_VND:   <?=$os_vnd?> #
+      OS_VER:   <?=DEF[$os_vnd]?> #
+      CC_VND:   <?=$cc_vnd?> #
+      CC_VER:   cur
+<?php
+}
+
+?>
+name: cmake-build-ci
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+  push:
+    paths:
+      - ".github/workflows/cmake-build-ci*"
+      - "CMake*"
+      - "CPack*"
+      - "contrib/**"
+      - "include/**"
+      - "src/**"
+      - "test/**"
+    branches-ignore:
+      - gh-pages
+  pull_request:
+    branches:
+      - master
+      - v1.x
+env:
+  # defaults
+  INSTALL_MEMCACHED:  memcached
+  ENABLE_SASL:        "OFF" # ^ almost no memcached distribution package has built in sasl support
+  ENABLE_HASH_HSIEH:  "ON"
+  ENABLE_DTRACE:      "OFF"
+  OS_VND:   <?=DEF["os"]?> #
+  OS_VER:   <?=DEF[DEF["os"]]?> #
+  CC_VND:   <?=DEF[DEF[DEF["os"]]]?> #
+  CC_VER:   cur
+
+jobs:
+
+  # sanitizer
+  debug-sanitizer:
+    name: debug sanitizer
+    runs-on: <?=DEF[DEF["os"]]?> #
+    strategy:
+      matrix:
+        sanitizer: ['address;undefined', 'thread']
+    env:
+      CMAKE_BUILD_TYPE:   "Debug"
+      BUILD_TESTING:      "ON"
+      VERBOSE:            "ON"
+      ENABLE_SANITIZERS:  ${{ matrix.sanitizer }}
+    steps:
+      - uses: actions/checkout@v3
+<?php steps("Linux"); ?>
+
+# memcached
+  debug-memcached:
+    name: debug memcached
+    runs-on: <?=DEF[DEF["os"]]?> #
+    continue-on-error: true
+    strategy:
+      matrix:
+        memcached: ['master', '1.6.17', '1.6.9', '1.5.22', '1.5.6']
+    env:
+      CMAKE_BUILD_TYPE:   "Debug"
+      BUILD_TESTING:      "ON"
+      VERBOSE:            "ON"
+      INSTALL_MEMCACHED:  ""
+      MEMCACHED_PREFIX:   "/tmp"
+      ENABLE_SASL:        "ON"
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          repository: memcached/memcached
+          path: memcached
+          ref: ${{ matrix.memcached }}
+<?php steps("Linux"); ?>
+
+# coverage linux
+  debug-coverage-linux:
+    name: debug coverage (<?=defaults()?>)
+    runs-on: <?=DEF[DEF["os"]]?> #
+    env:
+      CMAKE_BUILD_TYPE:   "Debug"
+      BUILD_TESTING:      "ON"
+      VERBOSE:            "ON"
+      CFLAGS:             "-O0 --coverage"
+      CXXFLAGS:           "-O0 --coverage"
+      INSTALL_MEMCACHED:  ""
+      MEMCACHED_PREFIX:   "/tmp"
+      ENABLE_SASL:        "ON"
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          repository: memcached/memcached
+          path: memcached
+          ref: 1.6.7
+<?php steps("Linux"); ?>
+      - uses: codecov/codecov-action@v3
+
+
+  # coverage mac
+  debug-coverage-mac:
+    name: debug coverage (<?=defaults("macOS")?>)
+    runs-on: <?=DEF["macOS"]?> #
+    env:
+      CMAKE_BUILD_TYPE:   "Debug"
+      BUILD_TESTING:      "ON"
+      VERBOSE:            "ON"
+      CFLAGS:             "-O0 --coverage"
+      CXXFLAGS:           "-O0 --coverage"
+<?php env_override("macOS")?>
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v3
+<?php steps("macOS", false); ?>
+      - uses: codecov/codecov-action@v3
+
+  # mac release builds
+  mac:
+    name: release
+    strategy:
+      fail-fast: false
+      matrix:
+        os_ver: [macos-12, macos-11, macos-10.15]
+    runs-on: ${{ matrix.os_ver }}
+    env:
+      CMAKE_BUILD_TYPE:   "Release"
+      BUILD_DOCS_MANGZ:   "ON"
+<?php env_override("macOS")?>
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+<?php steps("macOS", false); ?>
+
+  # windows release builds
+  windows:
+    name: release
+    strategy:
+      fail-fast: false
+      matrix:
+        os_ver: [windows-2022, windows-2019]
+        cc_vnd: [msvc, mingw]
+        cc_ver: [cur]
+    runs-on: ${{ matrix.os_ver }}
+    continue-on-error: true
+    env:
+      CMAKE_BUILD_TYPE: "Release"
+      OS_VND: Windows
+      OS_VER: ${{ matrix.os_ver }}
+      CC_VND: ${{ matrix.cc_vnd }}
+      CC_VER: ${{ matrix.cc_ver }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+<?php steps("Windows", true); ?>
+
+  # linux release builds
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        os_ver: [ubuntu-22.04, ubuntu-20.04]
+        cc_vnd: [gnu, clang]
+        cc_ver: [new, cur, old]
+    runs-on: ${{ matrix.os_ver }}
+    continue-on-error: ${{ matrix.cc_vnd == 'clang' }}
+    env:
+      CMAKE_BUILD_TYPE: "Release"
+      BUILD_DOCS_MANGZ: "ON"
+      OS_VND: Linux
+      OS_VER: ${{ matrix.os_ver }}
+      CC_VND: ${{ matrix.cc_vnd }}
+      CC_VER: ${{ matrix.cc_ver }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+<?php steps("Linux", true); ?>
