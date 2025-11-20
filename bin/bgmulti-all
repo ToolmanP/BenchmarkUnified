@@ -83,7 +83,7 @@ export SCALE=$(((CONTAINERS + 7) / 8))
 
 scale_cases="lock2 pwrite2 eventfd1 writeseek2 page_fault2 pipe1 unlink1 open1 open3 open2 unlink2 pread2 fallocate1"
 for case in $scale_cases; do
-  "$ROOT"/bin/bgmulti "$AFFINITY" -i will-it-scale -n "$case" -- "./${case}_processes -s 20 -w 20 -t $((20 * SCALE))"
+  "$ROOT"/bin/bgmulti "$AFFINITY" -i will-it-scale -n "$case" -- "./${case}_processes -s $((SCALE * 20)) -w 20 -t $NTHREADS"
 sleep 10
 done
 
