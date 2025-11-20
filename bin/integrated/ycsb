@@ -32,7 +32,7 @@ nerdctl run \
   --rm \
   $CCPUSET \
   "toolmanp/go-ycsb-rocksdb-dockerized:22.04-zpoline" \
-  bash -c "export workloads=\"a b c d e f\"; for w in \$workloads; do go-ycsb load mysql -p recordcount=100000 -p operationcount=$((100000 * SCALE)) -p threadcount="$NCLIENTS" -p mysql.host="$IP" -p mysql.password=root -P /workloads/workload\$w && go-ycsb run mysql -p recordcount=100000 -p operationcount=$((100000 * SCALE)) -p threadcount="$NCLIENTS" -p mysql.host="$IP" -p mysql.password=root -P /workloads/workload\$w; done" | tee -a "$LOGS/$NAME".log
+  bash -c "export workloads=\"a b c d e f\"; for w in \$workloads; do go-ycsb run mysql -p recordcount=50000 -p operationcount=$((100000 * SCALE)) -p threadcount="$NCLIENTS" -p mysql.host="$IP" -p mysql.password=root -P /workloads/workload\$w; done" | tee -a "$LOGS/$NAME".log
 
 done
 
