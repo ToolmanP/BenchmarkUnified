@@ -46,8 +46,10 @@ if [[ ! -f $PROG ]]; then
 fi
 
 pids=()
+rm -f $BARRIER_ROOT/ready
 for i in $(seq 0 2 $((CONTAINERS - 1))); do
-  LNAME="$INTEGRATION-$NAME-$TIMESTAMP-$((i/2))-bg"
+  SNAME="$INTEGRATION-$NAME-$TIMESTAMP-$((i/2))-server-bg"
+  CNAME="$INTEGRATION-$NAME-$TIMESTAMP-$((i/2))-client-bg"
   if [[ $MODE == "multi-affinity" ]]; then
     SCPUSET="--cpuset-cpus=$(circular_seq "$i" "$NSERVERS" "$CONTAINERS" "$PROCS")"
     CCPUSET="--cpuset-cpus=$(circular_seq "$((i+1))" "$NSERVERS" "$CONTAINERS" "$PROCS")"
@@ -55,10 +57,16 @@ for i in $(seq 0 2 $((CONTAINERS - 1))); do
     SCPUSET=""
     CCPUSET=""
   fi
-  env SCPUSET="$SCPUSET" CCPUSET="$CCPUSET" NAME="$LNAME" "$PROG" &> /dev/null &
+  env SYNC_PRI="$SYNC_PRI" SCPUSET="$SCPUSET" CCPUSET="$CCPUSET" SNAME="$SNAME" CNAME="$CNAME" "$PROG" &> /dev/null &
   pids+=("$!")
 done
-
+for i in $(seq 0 2 $((CONTAINERS - 1))); do
+  SNAME="$INTEGRATION-$NAME-$TIMESTAMP-$((i/2))-server-bg"
+  while ! nerdctl inspect $SNAME &> /dev/null ; do
+    sleep 1
+  done
+done
+touch $BARRIER_ROOT/ready
 for pid in "${pids[@]}"; do
   waitpid -e "$pid"
 done

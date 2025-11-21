@@ -54,4 +54,7 @@ circular_seq() {
     echo "${seq[*]}"
 }
 
+
+SYNC_PRI="while [[ ! -f /barrier/ready ]]; do sleep 0.5; done;"
+
 export IMAGE_MAPPING RUNTIME_MAPPING

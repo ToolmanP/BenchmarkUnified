@@ -6,6 +6,7 @@ NAME=${NAME-dummy}
 TIMESTAMP=$(date +%s)
 ROUNDS=${ROUNDS:-1}
 
+BARRIER_ROOT=${BARRIER_ROOT:-$ROOT/bin/barrier}
 RUNTIME=${RUNTIME-io.containerd.runc.v2}
 EXTRA_FLAGS=${EXTRA_FLAGS:-""}
 CONTAINERS=${CONTAINERS:-4}
@@ -26,8 +27,9 @@ spawn_container() {
     -m  ${MEM} \
     --tmpfs /tmp:size=$MEM \
     --name "$CONTAINER_NAME" \
+    -v $BARRIER_ROOT:/barrier \
     --runtime "$RUNTIME" \
-    "$IMAGE" bash -c "$@" &>> "$LOGS/$CONTAINER_NAME-bg".log &
+    "$IMAGE" bash -c "$SYNC_PRI $@" &>> "$LOGS/$CONTAINER_NAME-bg".log &
   echo $!
 }
 
@@ -42,21 +44,29 @@ spawn_container_cpuset() {
     --cpus ${NTHREADS} \
     -m ${MEM} \
     --tmpfs /tmp \
+    -v $ROOT/bin/barrier:/barrier \
     --name "$CONTAINER_NAME" \
     --cpuset-cpus "$CPUSET" \
     --runtime "$RUNTIME" \
-    "$IMAGE" bash -c "$@" &>> "$LOGS/$CONTAINER_NAME-bg".log &
+    "$IMAGE" bash -c "$SYNC_PRI $@" &>> "$LOGS/$CONTAINER_NAME-bg".log &
   echo $!
 }
 
 spawn_multi() {
   for _ in $(seq 1 $ROUNDS); do
+    rm -f $BARRIER_ROOT/ready
     local pid
     local pids=()
     for i in $(seq 1 "$CONTAINERS"); do 
       pid=$(spawn_container "$IMAGE_CODE-$NAME-$TIMESTAMP-$i" "$@")
       pids+=("$pid")
     done
+    for i in $(seq 0 $((CONTAINERS - 1))); do
+      while ! nerdctl inspect $IMAGE_CODE-$NAME-$TIMESTAMP-$i &> /dev/null; do
+        sleep 1
+      done
+    done
+    touch $BARRIER_ROOT/ready
     for pid in "${pids[@]}"; do
       waitpid -e "$pid"
     done
@@ -65,13 +75,19 @@ spawn_multi() {
 
 spawn_multi_affinity() {
   for _ in $(seq 1 $ROUNDS); do
+    rm -f $BARRIER_ROOT/ready
     local pid
     local pids=()
     for i in $(seq 0 $((CONTAINERS - 1))); do 
       pid=$(spawn_container_cpuset "$IMAGE_CODE-$NAME-$TIMESTAMP-$i" "$i" "$@")
       pids+=("$pid")
     done
-    
+    for i in $(seq 0 $((CONTAINERS - 1))); do
+      while ! nerdctl inspect $IMAGE_CODE-$NAME-$TIMESTAMP-$i &> /dev/null; do
+        sleep 1
+      done
+    done
+    touch $BARRIER_ROOT/ready
     for pid in "${pids[@]}"; do
       waitpid -e "$pid"
     done

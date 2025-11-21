@@ -9,14 +9,13 @@ REALMEM=$(echo "$MEM" | cut -d G -f 1)
 REALMEM="$((REALMEM + 1))G"
 NSERVERS=${NSERVERS:-4}
 NCLIENTS=${NCLIENTS:-4}
-SCALE=${SCALE:-1}
 
 # Server Side Initialization (Just use the temporary filesystem)
 nerdctl run -d \
   $EXTRA_SERVER_FLAGS \
   --runtime "$RUNTIME" \
   -m "$REALMEM" \
-  --name "$NAME" \
+  --name "$SNAME" \
   --cpus "$NSERVERS" \
   $SCPUSET \
   --tmpfs /tmp:size=$MEM \
@@ -30,12 +29,14 @@ IP=$(nerdctl inspect --format '{{.NetworkSettings.IPAddress}}' "$NAME")
 for _ in $(seq 1 "$ROUNDS"); do
 nerdctl run \
   --rm \
+  --name "$CNAME" \
   $CCPUSET \
+  -v $ROOT/bin/barrier:/barrier \
   "toolmanp/go-ycsb-rocksdb-dockerized:22.04-zpoline" \
-  bash -c "export workloads=\"a b c d e f\"; for w in \$workloads; do go-ycsb run mysql -p recordcount=50000 -p operationcount=$((100000 * SCALE)) -p threadcount="$NCLIENTS" -p mysql.host="$IP" -p mysql.password=root -P /workloads/workload\$w; done" | tee -a "$LOGS/$NAME".log
+  bash -c "$SYNC_PRI export workloads=\"a b c d e f\"; for w in \$workloads; do go-ycsb run mysql -p recordcount=50000 -p operationcount=100000 -p threadcount="$NCLIENTS" -p mysql.host="$IP" -p mysql.password=root -P /workloads/workload\$w; done" | tee -a "$LOGS/$NAME".log
 
 done
 
 sleep 1
 
-nerdctl rm --force "$NAME" &> /dev/null
+nerdctl rm --force "$SNAME" &> /dev/null
