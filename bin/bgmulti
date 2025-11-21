@@ -29,8 +29,7 @@ spawn_container() {
     --name "$CONTAINER_NAME" \
     -v $BARRIER_ROOT:/barrier \
     --runtime "$RUNTIME" \
-    "$IMAGE" bash -c "$SYNC_PRI $@" &>> "$LOGS/$CONTAINER_NAME-bg".log &
-  echo $!
+    "$IMAGE" bash -c "$SYNC_PRI $@" &>> "$LOGS/$CONTAINER_NAME-bg".log & echo $!
 }
 
 spawn_container_cpuset() {

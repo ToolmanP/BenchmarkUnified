@@ -2,7 +2,7 @@
 
 TIMESTAMP=$(date +%s)
 MODE="multi"
-
+BARRIER_ROOT=${BARRIER_ROOT:-$ROOT/bin/barrier}
 . "$ROOT"/bin/env
 
 if ! eval set -- "$(getopt -o n:i: --long rounds:,affinity -- "$@")"; then

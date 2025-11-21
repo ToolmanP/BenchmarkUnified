@@ -3,6 +3,8 @@
 # This could be run as a background process to parallel
 RUNTIME=${RUNTIME:-io.containerd.runc.v2}
 NAME=${NAME:-dummy}
+SNAME=${SNAME:-$NAME-server}
+CNAME=${CNAME:-$NAME}
 ROUNDS=${ROUNDS:-1}
 MEM=${MEM:-4G}
 REALMEM=$(echo "$MEM" | cut -d G -f 1)
@@ -24,7 +26,7 @@ nerdctl run -d \
 
 sleep 1
 
-IP=$(nerdctl inspect --format '{{.NetworkSettings.IPAddress}}' "$NAME")
+IP=$(nerdctl inspect --format '{{.NetworkSettings.IPAddress}}' "$SNAME")
 
 # Client Side Benchmarking (Use native runc)
 for _ in $(seq 1 "$ROUNDS"); do
@@ -34,9 +36,8 @@ nerdctl run \
   -v $ROOT/bin/barrier:/barrier \
   $CCPUSET \
   "toolmanp/ioperf-dockerized:22.04-zpoline" \
-  bash -c "$SYNC_PRI memslap -c $NCLIENTS -s "$IP:11211" -t hybrid -F -l 100000 -e 100000" | tee -a "$LOGS/$NAME".log
+  bash -c "$SYNC_PRI memslap -c $NCLIENTS -s "$IP:11211" -t hybrid -F -l 100000 -e 100000" | tee -a "$LOGS/$CNAME".log
 done
 
 sleep 1
-
 nerdctl rm --force "$SNAME" &> /dev/null
