@@ -16,4 +16,5 @@ RUN rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
 COPY --from=builder /usr/local/bin/* /usr/local/bin/
 COPY --from=builder /usr/local/lib/* /usr/local/lib/
 WORKDIR /ioperf
-ADD . .
+ADD mysqld-init.sql mysqld-init.sql
+ADD fio fio

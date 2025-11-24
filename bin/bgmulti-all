@@ -10,10 +10,12 @@ MEM="16G"
 RUNTIME=""
 AFFINITY=""
 CONTAINERS=4
+HOOK="libritsu.so"
+ZPOLINE_VOLUME="/usr/local/lib/zpoline"
 
 . "$ROOT"/bin/env
 
-if ! eval set -- "$(getopt -o r:n:c:t:m: --long rounds:,affinity,count:,pull -- "$@")"; then
+if ! eval set -- "$(getopt -o r:n:c:t:m:z --long rounds:,affinity,count:,hook:,volume:,pull -- "$@")"; then
   exit $?
 fi
 
@@ -22,6 +24,10 @@ while true; do
     -r)
       RUNTIME_CODE="$2"
       shift 2
+      ;;
+    -z)
+      ZRUN="zrun"
+      shift
       ;;
     -m)
       MEM="$2"
@@ -33,6 +39,14 @@ while true; do
       ;;
     --count)
       CONTAINERS=$2
+      shift 2
+      ;;
+    --volume)
+      ZOLINE_VOLUME="$2"
+      shift 2
+      ;;
+    --hook)
+      HOOK="$2"
       shift 2
       ;;
     --pull)
@@ -79,6 +93,14 @@ fi
 export LOGS="$LOGS/$NAME"
 mkdir -p "$LOGS"
 export ROUNDS NAME NTHREADS NSERVERS NCLIENTS MEM RUNTIME CONTAINERS
+
+if [[ ! -z ${ZRUN} ]]; then
+  export ZP_FLAGS="-v $ZPOLINE_VOLUME:/usr/lib/zpoline -e LIBZPHOOK=/usr/lib/zpoline/$HOOK"
+  export EXTRA_FLAGS="$EXTRA_FLAGS $ZP_FLAGS --net=none"
+  export EXTRA_SERVER_FLAGS="$ZP_FLAGS"
+  export ZRUN
+fi
+
 scale_cases="lock2 eventfd1 writeseek2 page_fault2 pipe1 unlink1 open1 open3 open2 unlink2 pread2 fallocate1"
 for case in $scale_cases; do
   "$ROOT"/bin/bgmulti "$AFFINITY" -i will-it-scale -n "$case" -- "./${case}_processes -s 20 -w 20 -t $NTHREADS"

@@ -8,15 +8,22 @@ NCLIENTS=4
 NTHREADS=4
 MEM="16G"
 RUNTIME=""
+ZRUN=""
+HOOK="libritsu.so"
+ZPOLINE_VOLUME="/usr/local/lib/zpoline"
 
 . $ROOT/bin/env
 
-if ! eval set -- "$(getopt -o r:n:c:t:m: --long rounds:,pull -- "$@")"; then
+if ! eval set -- "$(getopt -o r:n:c:t:m:z --long rounds:,pull,hook:,volume: -- "$@")"; then
   exit $?
 fi
 
 while true; do
   case $1 in
+    -z)
+      ZRUN="zrun"
+      shift
+      ;;
     -r)
       RUNTIME_CODE="$2"
       shift 2
@@ -35,6 +42,12 @@ while true; do
      done     
      exit 0
      ;;
+    --hook)
+      HOOK="$1"
+      ;;
+    --volume)
+      ZPOLINE_VOLUME="$2"
+      ;;
     --rounds)
       ROUNDS="$2"
       shift 2
@@ -69,13 +82,19 @@ fi
 export LOGS="$LOGS/$NAME"
 mkdir -p $LOGS
 export EXTRA_FLAGS="-m $MEM --cpus $NTHREADS"
+if [[ ! -z ${ZRUN} ]]; then
+  export ZP_FLAGS="-v $ZPOLINE_VOLUME:/usr/lib/zpoline -e LIBZPHOOK=/usr/lib/zpoline/$HOOK"
+  export EXTRA_FLAGS="$EXTRA_FLAGS $ZP_FLAGS --net=none"
+  export EXTRA_SERVER_FLAGS="$ZP_FLAGS"
+  export ZRUN
+fi
 export ROUNDS NAME NTHREADS NSERVERS NCLIENTS MEM RUNTIME
 
 $ROOT/bin/oneshot -i unixbench -- "syscall 10 close"
 sleep 10
 $ROOT/bin/oneshot -i sqlitebench -- "sqlite-bench --db=/tmp/"
 sleep 10
-$ROOT/bin/oneshot -i blogbench -- "blogbench -d /tmp/ --iterations=1"
+$ROOT/bin/oneshot -i blogbench -- "blogbench -d /tmp/ --iterations=3"
 sleep 10
 $ROOT/bin/oneshot -i vmitosis -- "bench_btree_mt && bench_gups_toy && bench_xsbench_mt"
 sleep 10
